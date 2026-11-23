@@ -9,6 +9,15 @@ interface Tab {
   label: string;
 }
 
+/** Tabs of an assistant page. Each needs a matching child route (checked in app.routes.spec.ts). */
+export const BOT_TABS: Tab[] = [
+  { path: 'documents', label: 'Documents' },
+  { path: 'conversations', label: 'Conversations' },
+  { path: 'unanswered', label: 'Unanswered' },
+  { path: 'install', label: 'Install' },
+  { path: 'settings', label: 'Settings' },
+];
+
 /** Header and tabs for one assistant. The tab pages read the same `id` route param. */
 @Component({
   selector: 'app-bot-detail',
@@ -51,13 +60,7 @@ export class BotDetail {
 
   readonly id = input.required<string>();
 
-  protected readonly tabs: Tab[] = [
-    { path: 'documents', label: 'Documents' },
-    { path: 'conversations', label: 'Conversations' },
-    { path: 'unanswered', label: 'Unanswered' },
-    { path: 'install', label: 'Install' },
-    { path: 'settings', label: 'Settings' },
-  ];
+  protected readonly tabs = BOT_TABS;
 
   constructor() {
     effect(() => void this.current.load(this.id()));
