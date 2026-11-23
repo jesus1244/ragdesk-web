@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 
 import { CopyButton } from '../../shared/copy-button';
 import { CurrentBot } from './current-bot';
-import { embedSnippet } from './embed-snippet';
+import { demoPageUrl, embedSnippet } from './embed-snippet';
 
 @Component({
   selector: 'app-install-tab',
@@ -21,7 +21,15 @@ import { embedSnippet } from './embed-snippet';
           aria-label="Embed code"
           >{{ code }}</pre>
         <div class="mt-3"><app-copy-button [value]="code" label="Copy code" /></div>
-        <p class="mt-4 text-sm text-slate-600 dark:text-slate-400">
+        <h3 class="mt-6 font-semibold">Try it first</h3>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          Open a sample website with the assistant installed. Questions asked there appear in
+          <strong>Conversations</strong>.
+        </p>
+        <a class="btn-secondary mt-3 inline-flex" [href]="demoUrl()" target="_blank" rel="noopener"
+          >Try the assistant (opens a new tab)</a
+        >
+        <p class="mt-6 text-sm text-slate-600 dark:text-slate-400">
           Limit which websites can use it under <strong>Settings → Allowed websites</strong>. When
           the list is empty any website can embed it.
         </p>
@@ -31,6 +39,11 @@ import { embedSnippet } from './embed-snippet';
 })
 export class InstallTab {
   private readonly current = inject(CurrentBot);
+
+  protected readonly demoUrl = computed(() => {
+    const bot = this.current.bot();
+    return bot ? demoPageUrl(window.location.origin, bot.public_key) : '';
+  });
 
   protected readonly snippet = computed(() => {
     const bot = this.current.bot();
