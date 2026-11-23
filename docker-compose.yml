@@ -1,0 +1,11 @@
+# Runs the web app against the API stack from the ragdesk-api repo.
+#   1) in ../ragdesk-api: docker compose --profile app up -d
+#   2) here:              docker compose up --build   ->  http://localhost:8080
+services:
+  web:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      API_UPSTREAM: http://host.docker.internal:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
