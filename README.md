@@ -26,7 +26,9 @@ tag. Answers stream in live and cite the passage they came from.
 - **Auth**: register and sign in with JWT and **silent refresh**. One shared refresh request serves
   any burst of 401s, which matters with rotating refresh tokens. Route guards and safe `returnUrl`.
 - **Assistants**: create, rename, set a welcome message, add guidance, restrict the websites that
-  may embed the widget, delete.
+  may embed the widget, delete. Each one has a **language** (English or Spanish), up to four
+  **suggested questions** and its own **message for when nothing matches**, so a question the
+  documents cannot answer still ends with a useful next step.
 - **Documents**: upload PDF, Markdown or text, add a web page by URL, or paste text. The list
   polls while the background worker is indexing and offers retry on failure.
 - **Conversations**: answer rate, transcripts, and **which source backed each answer**.
@@ -37,6 +39,8 @@ tag. Answers stream in live and cite the passage they came from.
 **Embeddable widget (`src/widget/`)**
 
 - One file, **about 3 kB gzipped**, no framework and no dependencies. CI fails above 20 kB.
+- **English and Spanish**: labels, errors and the default messages follow the assistant language.
+  Visitors see the owner's suggested questions as buttons when the chat opens.
 - Runs in a **Shadow DOM**: the host page cannot restyle it and it cannot leak styles.
 - Reads the answer as a stream (`fetch` plus an incremental Server-Sent Events parser, tested with
   events split at arbitrary points) and lists the sources under each answer.
@@ -46,7 +50,8 @@ tag. Answers stream in live and cite the passage they came from.
 ## Try it end to end (two different places)
 
 RAGDesk has two separate faces. Run the API and `npm start`, then seed the demo with
-`uv run ragdesk-seed-demo` in the API repo (it prints the demo login and the assistant's **widget key**).
+`uv run ragdesk-seed-demo` in the API repo. It creates two demo assistants, one in English and one
+in Spanish, and prints the demo login and a **widget key** for each.
 
 | Who | What they see | Where |
 | --- | --- | --- |
