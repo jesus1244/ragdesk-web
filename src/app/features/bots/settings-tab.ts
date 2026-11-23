@@ -8,6 +8,8 @@ import { ToastService } from '../../core/notifications/toast.service';
 import { FieldError } from '../../shared/field-error';
 import { BotsApi } from './bots-api';
 import { CurrentBot } from './current-bot';
+import { BotLanguage } from './bot.models';
+import { parseLines } from './lines';
 import { parseOrigins } from './origins';
 
 @Component({
@@ -28,6 +30,42 @@ import { parseOrigins } from './origins';
         <span class="label">Welcome message</span>
         <input class="input" [formField]="settingsForm.welcome_message" />
         <app-field-error [field]="settingsForm.welcome_message" />
+      </label>
+      <label class="block">
+        <span class="label">Assistant language</span>
+        <select class="input" [formField]="settingsForm.language">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+        <span class="mt-1 block text-xs text-slate-600 dark:text-slate-400">
+          Sets the chat button labels and the default messages. Answers follow the language of each
+          question.
+        </span>
+      </label>
+      <label class="block">
+        <span class="label">Suggested questions (one per line, up to 4)</span>
+        <textarea
+          class="input"
+          rows="4"
+          placeholder="How long does shipping take?"
+          [formField]="settingsForm.suggested"
+        ></textarea>
+        <span class="mt-1 block text-xs text-slate-600 dark:text-slate-400">
+          Shown as buttons when the chat opens, so visitors start with questions your documents can
+          answer.
+        </span>
+      </label>
+      <label class="block">
+        <span class="label">Message when nothing matches (optional)</span>
+        <input
+          class="input"
+          placeholder="Email help@example.com and we will answer you"
+          [formField]="settingsForm.fallback_message"
+        />
+        <span class="mt-1 block text-xs text-slate-600 dark:text-slate-400">
+          Shown when the documents have nothing on the question. Leave empty for a default message.
+        </span>
+        <app-field-error [field]="settingsForm.fallback_message" />
       </label>
       <label class="block">
         <span class="label">Extra guidance (optional)</span>
@@ -91,6 +129,9 @@ export class SettingsTab {
     welcome_message: '',
     instructions: '',
     origins: '',
+    language: 'en' as BotLanguage,
+    fallback_message: '',
+    suggested: '',
   });
   protected readonly settingsForm = form(
     this.model,
@@ -101,6 +142,7 @@ export class SettingsTab {
       required(path.welcome_message, { message: 'Write a welcome message' });
       maxLength(path.welcome_message, 300);
       maxLength(path.instructions, 2000);
+      maxLength(path.fallback_message, 300);
     },
     { submission: { action: () => this.save() } },
   );
@@ -114,6 +156,9 @@ export class SettingsTab {
           welcome_message: bot.welcome_message,
           instructions: bot.instructions,
           origins: bot.allowed_origins.join('\n'),
+          language: bot.language,
+          fallback_message: bot.fallback_message,
+          suggested: bot.suggested_questions.join('\n'),
         });
       }
     });
@@ -133,6 +178,9 @@ export class SettingsTab {
           welcome_message: value.welcome_message.trim(),
           instructions: value.instructions.trim(),
           allowed_origins: parseOrigins(value.origins),
+          language: value.language,
+          fallback_message: value.fallback_message.trim(),
+          suggested_questions: parseLines(value.suggested),
         }),
       );
       this.current.bot.set(updated);

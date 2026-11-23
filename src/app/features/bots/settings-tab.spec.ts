@@ -14,6 +14,9 @@ const bot: Bot = {
   welcome_message: 'Hi there',
   instructions: '',
   allowed_origins: ['https://a.com'],
+  language: 'en',
+  fallback_message: '',
+  suggested_questions: ['What can I order?'],
   is_demo: false,
   created_at: '2026-11-23T10:00:00Z',
 };
@@ -69,5 +72,30 @@ describe('SettingsTab', () => {
     await fixture.whenStable();
     http.expectNone((r) => r.method === 'DELETE');
     expect(el.textContent).toContain('Yes, delete it');
+  });
+
+  it('saves the language, the fallback message and the suggested questions', async () => {
+    const { http, fixture, el } = setup();
+    await fixture.whenStable();
+    expect(el.querySelector<HTMLSelectElement>('select')?.value).toBe('en');
+    const questions = el.querySelector<HTMLTextAreaElement>('textarea[placeholder^="How long"]')!;
+    expect(questions.value).toBe('What can I order?');
+
+    const language = el.querySelector<HTMLSelectElement>('select')!;
+    language.value = 'es';
+    language.dispatchEvent(new Event('input'));
+    language.dispatchEvent(new Event('change'));
+    questions.value = '¿Qué puedo pedir?\n\n¿Cuánto tarda el envío?\n¿Qué puedo pedir?';
+    questions.dispatchEvent(new Event('input'));
+    const fallback = el.querySelector<HTMLInputElement>('input[placeholder^="Email"]')!;
+    fallback.value = '  Escríbenos a ayuda@tienda.com  ';
+    fallback.dispatchEvent(new Event('input'));
+    el.querySelector<HTMLFormElement>('form')?.requestSubmit();
+    await fixture.whenStable();
+
+    const body = http.expectOne((r) => r.method === 'PATCH').request.body;
+    expect(body.language).toBe('es');
+    expect(body.fallback_message).toBe('Escríbenos a ayuda@tienda.com');
+    expect(body.suggested_questions).toEqual(['¿Qué puedo pedir?', '¿Cuánto tarda el envío?']);
   });
 });

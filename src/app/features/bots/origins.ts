@@ -1,8 +1,4 @@
-/** One origin per line; blanks and duplicates are dropped. The API validates and normalizes them. */
-export function parseOrigins(text: string): string[] {
-  const lines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  return [...new Set(lines)];
-}
+import { parseLines } from './lines';
+
+/** One origin per line. The API validates and normalizes them. */
+export const parseOrigins = parseLines;
