@@ -87,6 +87,25 @@ describe('ConversationsTab', () => {
     fixture.destroy();
   });
 
+  it('uses the singular for a single message', async () => {
+    const { fixture, el, reply } = setup(ConversationsTab);
+    await reply('/stats', stats);
+    await reply(
+      '/conversations',
+      page([
+        {
+          id: 'c1',
+          visitor_id: null,
+          created_at: '2026-11-23T10:00:00Z',
+          message_count: 1,
+          last_question: 'Hi',
+        },
+      ]),
+    );
+    await vi.waitFor(() => expect(el.textContent).toContain('1 message ·'));
+    fixture.destroy();
+  });
+
   it('shows an empty state without conversations', async () => {
     const { fixture, el, reply } = setup(ConversationsTab);
     await reply('/stats', {

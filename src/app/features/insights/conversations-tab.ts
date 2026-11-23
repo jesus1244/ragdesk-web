@@ -47,7 +47,8 @@ import { BotStats, Conversation, Message } from './insights.models';
                   {{ c.last_question ?? 'Conversation' }}
                 </span>
                 <span class="text-xs text-slate-600 dark:text-slate-400">
-                  {{ c.message_count }} messages · {{ c.created_at | date: 'medium' }}
+                  {{ c.message_count }} {{ c.message_count === 1 ? 'message' : 'messages' }} ·
+                  {{ c.created_at | date: 'medium' }}
                 </span>
               </button>
               @if (openId() === c.id) {
