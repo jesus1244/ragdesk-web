@@ -1,0 +1,95 @@
+<a
+  href="#main"
+  class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2"
+>
+  Skip to content
+</a>
+
+<div class="min-h-dvh bg-slate-50 lg:grid lg:grid-cols-[16rem_1fr] dark:bg-slate-950">
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-slate-200 bg-white transition-transform lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 dark:border-slate-800 dark:bg-slate-900"
+    [class.translate-x-0]="menuOpen()"
+    aria-label="Main navigation"
+  >
+    <div class="flex h-full flex-col">
+      <a
+        routerLink="/bots"
+        class="flex items-center gap-2 px-6 py-5 text-lg font-semibold text-slate-900 dark:text-white"
+      >
+        <span class="flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
+          <app-icon name="sparkles" class="size-4" />
+        </span>
+        RAGDesk
+      </a>
+      <nav class="flex-1 space-y-1 px-3">
+        @for (item of nav; track item.path) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300"
+            ariaCurrentWhenActive="page"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <app-icon [name]="item.icon" class="size-5" />
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+      <div class="border-t border-slate-200 p-4 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+          <span
+            class="flex size-9 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800 dark:bg-teal-900 dark:text-teal-200"
+            aria-hidden="true"
+          >
+            {{ auth.initials() }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+              {{ auth.user()?.full_name }}
+            </p>
+            <p class="truncate text-xs text-slate-600 dark:text-slate-400">
+              {{ auth.user()?.email }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-ghost px-2"
+            aria-label="Sign out"
+            (click)="auth.logout()"
+          >
+            <app-icon name="logout" class="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+      aria-label="Close menu"
+      (click)="menuOpen.set(false)"
+    ></button>
+  }
+
+  <div class="min-w-0">
+    <header
+      class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur lg:px-8 dark:border-slate-800 dark:bg-slate-950/80"
+    >
+      <button
+        type="button"
+        class="btn-ghost px-2 lg:hidden"
+        aria-label="Open menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(true)"
+      >
+        <app-icon name="menu" class="size-5" />
+      </button>
+      <div class="flex-1"></div>
+    </header>
+    <main id="main" class="mx-auto max-w-7xl px-4 py-8 lg:px-8" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { guestGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'bots' },
@@ -21,4 +21,17 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () => import('./layout/shell').then((m) => m.Shell),
+    children: [
+      {
+        path: 'bots',
+        title: 'Assistants � RAGDesk',
+        loadComponent: () => import('./features/bots/bots-page').then((m) => m.BotsPage),
+      },
+    ],
+  },
+  { path: '**', redirectTo: 'bots' },
 ];
