@@ -43,6 +43,20 @@ tag. Answers stream in live and cite the passage they came from.
 - Keyboard and screen-reader friendly: labelled controls, `role="log"`, `Esc` to close.
 - Sends no cookies and no secrets. It only knows the assistant's public key.
 
+## Try it end to end (two different places)
+
+RAGDesk has two separate faces. Run the API and `npm start`, then seed the demo with
+`uv run ragdesk-seed-demo` in the API repo (it prints the demo login and the assistant's **widget key**).
+
+| Who | What they see | Where |
+| --- | --- | --- |
+| **The business owner** | The admin panel: documents, conversations, unanswered questions, install snippet | `http://localhost:4200` (sign in with the demo account) |
+| **The website visitor** | The chat widget, which has no login | `http://localhost:4200/widget-demo.html?bot=<widget key>` |
+
+The demo page stands in for a customer's own website. Ask a question there, then open the panel
+(**Conversations** and **Unanswered**) to see it recorded. With the default fake providers the bot
+only matches words that appear in the documents; with real providers it understands paraphrases.
+
 ## Embed it
 
 ```html
@@ -50,7 +64,7 @@ tag. Answers stream in live and cite the passage they came from.
 ```
 
 The API is assumed to live on the same origin as the script; set `data-api="https://api.example.com"`
-to point somewhere else. Try it locally with `public/widget-demo.html?bot=<public key>`.
+to point somewhere else. Try it locally as described above.
 
 ## Security decisions
 
