@@ -1,8 +1,11 @@
 import { createSseParser } from './sse';
+import { Strings, strings } from './strings';
 
 export interface WidgetConfig {
   name: string;
   welcome_message: string;
+  language?: string;
+  suggested_questions?: string[];
 }
 
 export interface Citation {
@@ -20,10 +23,12 @@ export type ChatEvent =
 
 export class WidgetApiError extends Error {}
 
-const GENERIC_ERROR = 'Sorry, something went wrong. Please try again.';
-
 /** Maps a raw SSE event to a typed one. Unknown or malformed events are dropped. */
-export function toChatEvent(name: string, raw: string): ChatEvent | null {
+export function toChatEvent(
+  name: string,
+  raw: string,
+  genericError: string = strings('en').genericError,
+): ChatEvent | null {
   let data: unknown;
   try {
     data = JSON.parse(raw);
@@ -45,7 +50,7 @@ export function toChatEvent(name: string, raw: string): ChatEvent | null {
     case 'error':
       return {
         type: 'error',
-        message: typeof record['message'] === 'string' ? record['message'] : GENERIC_ERROR,
+        message: typeof record['message'] === 'string' ? record['message'] : genericError,
       };
     default:
       return null;
@@ -53,6 +58,13 @@ export function toChatEvent(name: string, raw: string): ChatEvent | null {
 }
 
 export class WidgetApi {
+  /** Texts for the assistant's language; known once the config has been loaded. */
+  private texts: Strings = strings(navigator.language);
+
+  get ui(): Strings {
+    return this.texts;
+  }
+
   constructor(
     private readonly apiBase: string,
     private readonly botKey: string,
@@ -66,7 +78,9 @@ export class WidgetApi {
     if (!response.ok) {
       throw new WidgetApiError(`Config request failed (${response.status})`);
     }
-    return (await response.json()) as WidgetConfig;
+    const config = (await response.json()) as WidgetConfig;
+    this.texts = strings(config.language);
+    return config;
   }
 
   /** Streams the answer. The generator ends after `done` or `error`. */
@@ -86,15 +100,14 @@ export class WidgetApi {
       }),
     });
     if (!response.ok || !response.body) {
-      const message =
-        response.status === 429 ? 'Too many questions, please wait a moment.' : GENERIC_ERROR;
+      const message = response.status === 429 ? this.texts.tooMany : this.texts.genericError;
       yield { type: 'error', message };
       return;
     }
 
     const queue: ChatEvent[] = [];
     const push = createSseParser((e) => {
-      const parsed = toChatEvent(e.event, e.data);
+      const parsed = toChatEvent(e.event, e.data, this.texts.genericError);
       if (parsed) {
         queue.push(parsed);
       }

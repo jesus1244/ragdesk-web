@@ -6,7 +6,7 @@ function sse(...events: [string, unknown][]): string {
 }
 
 /** A fetch double that serves config and a streamed answer, in small chunks to exercise buffering. */
-function fakeFetch(answer: string, status = 200) {
+function fakeFetch(answer: string, status = 200, extraConfig: Record<string, unknown> = {}) {
   const calls: { url: string; body?: Record<string, unknown>; credentials?: string }[] = [];
   const fetcher = (async (url: string, init?: RequestInit) => {
     calls.push({
@@ -15,7 +15,11 @@ function fakeFetch(answer: string, status = 200) {
       credentials: init?.credentials,
     });
     if (url.includes('/public/bots/')) {
-      return Response.json({ name: 'Acme help', welcome_message: 'Hello from Acme' });
+      return Response.json({
+        name: 'Acme help',
+        welcome_message: 'Hello from Acme',
+        ...extraConfig,
+      });
     }
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
@@ -31,8 +35,8 @@ function fakeFetch(answer: string, status = 200) {
   return { fetcher, calls };
 }
 
-function mount(answer: string, status = 200) {
-  const { fetcher, calls } = fakeFetch(answer, status);
+function mount(answer: string, status = 200, extraConfig: Record<string, unknown> = {}) {
+  const { fetcher, calls } = fakeFetch(answer, status, extraConfig);
   const host = document.createElement('div');
   document.body.append(host);
   const widget = new Widget(
@@ -159,5 +163,49 @@ describe('toChatEvent', () => {
       type: 'meta',
       conversationId: 'c',
     });
+  });
+
+  it('shows its own labels in the assistant language', async () => {
+    const { widget, root } = mount('', 200, { language: 'es' });
+    await widget.start();
+    expect(root.querySelector('form button')?.textContent).toBe('Enviar');
+    expect(root.querySelector('textarea')?.placeholder).toBe('Escribe tu pregunta…');
+    expect(root.querySelector('.launcher')?.getAttribute('aria-label')).toBe('Abrir chat');
+  });
+
+  it('falls back to English for an unknown language', async () => {
+    const { widget, root } = mount('', 200, { language: 'fr' });
+    await widget.start();
+    expect(root.querySelector('form button')?.textContent).toBe('Send');
+  });
+
+  it('offers the suggested questions and asks one when it is clicked', async () => {
+    const { widget, root, calls } = mount(
+      sse(['delta', { text: 'Five days.' }], ['done', { answered: true }]),
+      200,
+      { suggested_questions: ['How long is shipping?', 'What can I order?'] },
+    );
+    await widget.start();
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('.chips button')];
+    expect(chips.map((c) => c.textContent)).toEqual(['How long is shipping?', 'What can I order?']);
+    chips[0].click();
+    await vi.waitFor(() =>
+      expect(root.querySelector('.msg.bot:last-of-type')?.textContent).toBe('Five days.'),
+    );
+    expect(calls.at(-1)?.body?.['question']).toBe('How long is shipping?');
+    expect(root.querySelector('.chips')).toBeNull();
+  });
+
+  it('shows no suggestion area when the owner set none', async () => {
+    const { widget, root } = mount('');
+    await widget.start();
+    expect(root.querySelector('.chips')).toBeNull();
+  });
+
+  it('reports a rate limit in the assistant language', async () => {
+    const { widget, texts } = mount('', 429, { language: 'es' });
+    await widget.start();
+    await widget.ask('Hola');
+    expect(texts().at(-1)).toBe('Demasiadas preguntas, espera un momento.');
   });
 });

@@ -1,4 +1,5 @@
 import { Citation, WidgetApi } from './api';
+import { strings } from './strings';
 
 const STYLE = `
 :host { all: initial; }
@@ -17,6 +18,10 @@ header button { background: none; border: 0; color: inherit; font-size: 20px; cu
 .msg { max-width: 88%; padding: 9px 12px; border-radius: 12px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .msg.user { align-self: flex-end; background: #0f766e; color: #fff; }
 .msg.bot { align-self: flex-start; background: #fff; border: 1px solid #e2e8f0; }
+.chips { align-self: flex-start; display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid #0f766e; background: #fff; color: #0f766e; border-radius: 999px; padding: 6px 12px;
+  font-size: 13px; cursor: pointer; text-align: left; }
+.chips button:hover { background: #f0fdfa; }
 .sources { align-self: flex-start; font-size: 12px; color: #475569; margin: -4px 0 0 4px; }
 .sources li { list-style: none; }
 .sources ul { margin: 2px 0 0; padding: 0; }
@@ -26,6 +31,7 @@ form button { border: 0; border-radius: 10px; background: #0f766e; color: #fff; 
 form button:disabled { opacity: .5; cursor: not-allowed; }
 @media (prefers-color-scheme: dark) { .panel { background: #0f172a; color: #e2e8f0; } .log { background: #020617; }
   .msg.bot { background: #1e293b; border-color: #334155; color: #e2e8f0; } form { background: #0f172a; border-color: #334155; }
+  .chips button { background: #0f172a; color: #5eead4; border-color: #5eead4; } .chips button:hover { background: #134e4a; }
   textarea { background: #020617; color: #e2e8f0; border-color: #64748b; } .sources { color: #94a3b8; } }
 @media (prefers-reduced-motion: no-preference) { .panel { transition: opacity .15s; } }
 `;
@@ -77,6 +83,7 @@ export class Widget {
   private readonly log = el('div', 'log');
   private readonly input = el('textarea');
   private readonly send = el('button', undefined, 'Send');
+  private chips: HTMLElement | null = null;
   private conversationId: string | null = null;
   private busy = false;
 
@@ -94,9 +101,12 @@ export class Widget {
       const config = await this.api.config();
       this.panel.setAttribute('aria-label', config.name);
       this.title.textContent = config.name;
+      this.applyTexts();
       this.addMessage('bot', config.welcome_message);
+      this.addSuggestions(config.suggested_questions ?? []);
     } catch {
-      this.addMessage('bot', 'Hi! Ask me a question.');
+      this.applyTexts();
+      this.addMessage('bot', this.api.ui.fallbackWelcome);
     }
   }
 
@@ -115,6 +125,8 @@ export class Widget {
     if (!text || this.busy) {
       return;
     }
+    this.chips?.remove();
+    this.chips = null;
     this.setBusy(true);
     this.addMessage('user', text);
     const answer = this.addMessage('bot', '…');
@@ -134,13 +146,41 @@ export class Widget {
         this.log.scrollTop = this.log.scrollHeight;
       }
     } catch {
-      answer.textContent = 'Sorry, something went wrong. Please try again.';
+      answer.textContent = this.api.ui.genericError;
     } finally {
       this.setBusy(false);
     }
   }
 
-  private readonly title = el('span', undefined, 'Assistant');
+  private readonly title = el('span', undefined, strings(navigator.language).assistant);
+  private readonly closeButton = el('button', undefined, '×');
+
+  /** Labels follow the assistant's language, known once its settings are loaded. */
+  private applyTexts(): void {
+    const t = this.api.ui;
+    this.send.textContent = t.send;
+    this.input.placeholder = t.placeholder;
+    this.input.setAttribute('aria-label', t.yourQuestion);
+    this.launcher.setAttribute('aria-label', t.openChat);
+    this.closeButton.setAttribute('aria-label', t.closeChat);
+  }
+
+  private addSuggestions(questions: string[]): void {
+    if (questions.length === 0) {
+      return;
+    }
+    const box = el('div', 'chips');
+    box.setAttribute('role', 'group');
+    box.setAttribute('aria-label', this.api.ui.suggestions);
+    for (const question of questions) {
+      const chip = el('button', undefined, question);
+      chip.type = 'button';
+      chip.addEventListener('click', () => void this.ask(question));
+      box.append(chip);
+    }
+    this.chips = box;
+    this.log.append(box);
+  }
 
   private build(): void {
     const style = el('style');
@@ -160,9 +200,9 @@ export class Widget {
       }
     });
 
-    const close = el('button', undefined, '×');
+    const close = this.closeButton;
     close.type = 'button';
-    close.setAttribute('aria-label', 'Close chat');
+    close.setAttribute('aria-label', strings(navigator.language).closeChat);
     close.addEventListener('click', () => this.open(false));
     const header = el('header');
     header.append(this.title, close);
@@ -216,7 +256,7 @@ export class Widget {
     if (citations.length === 0) {
       return;
     }
-    const box = el('div', 'sources', 'Sources');
+    const box = el('div', 'sources', this.api.ui.sources);
     const list = el('ul');
     for (const c of citations) {
       list.append(el('li', undefined, `[${c.index}] ${c.source_name} — ${c.title}`));
