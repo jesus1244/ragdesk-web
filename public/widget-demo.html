@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RAGDesk widget demo</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.6; color: #0f172a; }
+      code { background: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Northwind Outdoor</h1>
+    <p>
+      This page stands in for your website. The chat button in the corner is the RAGDesk widget.
+      Open this page as <code>/widget-demo.html?bot=YOUR_PUBLIC_KEY</code>.
+    </p>
+    <script>
+      const key = new URLSearchParams(location.search).get('bot');
+      if (key) {
+        const s = document.createElement('script');
+        s.src = '/widget.js';
+        s.dataset.bot = key;
+        document.body.append(s);
+      }
+    </script>
+  </body>
+</html>
