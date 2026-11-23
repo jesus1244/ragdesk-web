@@ -34,6 +34,19 @@ module.exports = defineConfig([
     },
   },
   {
+    // Model and document text is untrusted: build DOM with textContent, never HTML strings.
+    files: ['src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        { property: 'innerHTML', message: 'Use textContent. Answers are untrusted data.' },
+        { property: 'outerHTML', message: 'Use textContent. Answers are untrusted data.' },
+        { property: 'insertAdjacentHTML', message: 'Use textContent. Answers are untrusted data.' },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},

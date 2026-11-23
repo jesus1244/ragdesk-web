@@ -1,0 +1,63 @@
+# Served by the official nginx image: files in /etc/nginx/templates are rendered with envsubst.
+# API_UPSTREAM is the API base URL, e.g. http://api:8000
+
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  ''      close;
+}
+
+server {
+  listen 8080;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  client_max_body_size 25m;
+
+  # Note: add_header in a location replaces server-level headers, so each location repeats them.
+
+  gzip on;
+  gzip_types text/css application/javascript application/json image/svg+xml;
+
+  # REST API and WebSocket, same origin as the app (no CORS needed)
+  location /api/ {
+    proxy_pass ${API_UPSTREAM};
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_read_timeout 1h;
+    # Server-Sent Events must reach the browser as they are produced.
+    proxy_buffering off;
+  }
+
+  # The embeddable widget is loaded by other websites and is not content-hashed: short cache, any origin.
+  location = /widget.js {
+    expires 5m;
+    add_header Cache-Control "public, max-age=300";
+    add_header Access-Control-Allow-Origin "*" always;
+    add_header X-Content-Type-Options nosniff always;
+    try_files $uri =404;
+  }
+
+  # Hashed build assets can be cached forever
+  location ~* \.(?:js|css|woff2?|svg|png|ico)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    try_files $uri =404;
+  }
+
+  # SPA fallback
+  location / {
+    add_header Cache-Control "no-cache";
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    try_files $uri $uri/ /index.html;
+  }
+}

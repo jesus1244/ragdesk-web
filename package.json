@@ -4,13 +4,14 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4200",
-    "build": "ng build",
+    "build": "npm run build:widget && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "test:ci": "ng test --watch=false",
     "format": "prettier --write \"src/**/*.{ts,html,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
+    "build:widget": "esbuild src/widget/main.ts --bundle --minify --format=iife --target=es2022 --outfile=public/widget.js"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -31,6 +32,7 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.1.12",
     "angular-eslint": "22.6.0",
+    "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.3",
