@@ -52,6 +52,7 @@ export class BotDetail {
   readonly id = input.required<string>();
 
   protected readonly tabs: Tab[] = [
+    { path: 'documents', label: 'Documents' },
     { path: 'install', label: 'Install' },
     { path: 'settings', label: 'Settings' },
   ];
