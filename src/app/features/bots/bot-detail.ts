@@ -53,6 +53,8 @@ export class BotDetail {
 
   protected readonly tabs: Tab[] = [
     { path: 'documents', label: 'Documents' },
+    { path: 'conversations', label: 'Conversations' },
+    { path: 'unanswered', label: 'Unanswered' },
     { path: 'install', label: 'Install' },
     { path: 'settings', label: 'Settings' },
   ];
