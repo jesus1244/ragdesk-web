@@ -12,5 +12,5 @@ export const authGuard: CanActivateFn = (_route, state) => {
 
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.isAuthenticated() ? inject(Router).createUrlTree(['/dashboard']) : true;
+  return auth.isAuthenticated() ? inject(Router).createUrlTree(['/bots']) : true;
 };

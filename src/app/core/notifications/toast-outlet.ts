@@ -25,7 +25,7 @@ import { ToastService } from './toast.service';
             class="mt-0.5 size-5 shrink-0"
             [class.text-emerald-600]="toast.kind === 'success'"
             [class.text-rose-600]="toast.kind === 'error'"
-            [class.text-indigo-600]="toast.kind === 'info'"
+            [class.text-teal-600]="toast.kind === 'info'"
           />
           <p class="flex-1 text-sm text-slate-700 dark:text-slate-200">{{ toast.message }}</p>
           <button

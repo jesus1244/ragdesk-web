@@ -1,3 +1,24 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { guestGuard } from './core/auth/auth.guards';
+
+export const routes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'bots' },
+  {
+    path: '',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/auth-layout').then((m) => m.AuthLayout),
+    children: [
+      {
+        path: 'login',
+        title: 'Sign in · RAGDesk',
+        loadComponent: () => import('./features/auth/login').then((m) => m.Login),
+      },
+      {
+        path: 'register',
+        title: 'Create account · RAGDesk',
+        loadComponent: () => import('./features/auth/register').then((m) => m.Register),
+      },
+    ],
+  },
+];
